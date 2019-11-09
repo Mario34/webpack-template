@@ -2,10 +2,9 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import HelloWorld from './components/HellowWorld'
 
-
 class App extends React.Component {
   render() {
-    return <HelloWorld message='Hellow World'/>;
+    return <HelloWorld message='Hellow World' />
   }
 }
 

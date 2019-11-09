@@ -4,6 +4,18 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin")
 const util = require('./util')
 const devMode = process.env.NODE_ENV !== 'production'
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const config = require('./config')
+
+const createLintingRule = () => ({
+  test: /\.(js|ts|jsx)$/,
+  loader: 'eslint-loader',
+  enforce: 'pre',
+  include: [util.resolve('src')],
+  options: {
+    formatter: require('eslint-friendly-formatter'),
+    emitWarning: true
+  }
+})
 
 module.exports = {
   entry: util.resolve('src/index.js'),
@@ -15,6 +27,7 @@ module.exports = {
   },
   module: {
     rules: [
+      ...(config.eslint ? [createLintingRule()] : []),
       {
         test: /\.js?$/,
         include: [
@@ -73,6 +86,6 @@ module.exports = {
         removeStyleLinkTypeAttributes: true,
         useShortDoctype: true
       }
-    }),
+    })
   ]
 };

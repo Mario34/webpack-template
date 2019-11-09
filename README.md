@@ -128,12 +128,12 @@ You may need an appropriate loader to handle this file type, currently no loader
 const path = require("path");
 
 //返回项目根目录下的dir路径
-exports.resolve = function resolve(dir) {
+exports.resolve = function(dir) {
   return path.join(__dirname, "..", dir);
 };
 
 //返回dits中文件路径下的dir路径
-exports.staticPath = function resolve(dir) {
+exports.staticPath = function(dir) {
   return path.join("static/", dir);
 };
 ```
@@ -141,7 +141,7 @@ exports.staticPath = function resolve(dir) {
 ### 3.2 配置`babel-loader`
 
 ```cmd
-npm install -D babel-loader @babel/core @babel/preset-env @babel/preset-react
+npm install --save-dev babel-loader @babel/core @babel/preset-env @babel/preset-react
 ```
 
 在`webpack.config.js`添加 babel 配置
@@ -252,19 +252,19 @@ npm install --save-dev webpack-merge
 npm install --save-dev clean-webpack-plugin html-webpack-plugin
 
 # 用于启动开发服务器
-npm install webpack-dev-server -D
+npm install --save-dev webpack-dev-server
 
 # 用于开发时模块热重载
-npm install hot-module-replacement-plugin -D
+npm install --save-dev hot-module-replacement-plugin
 
 # 产品模式压缩js
-npm install uglifyjs-webpack-plugin -D
+npm install --save-dev uglifyjs-webpack-plugin
 
 # 提取css、压缩css（替代ExtractTextWebpackPlugin）
-npm install mini-css-extract-plugin -D
+npm install --save-dev mini-css-extract-plugin
 
 # 注入process.env变量
-npm install cross-env -D
+npm install --save-dev cross-env
 ```
 
 ⚠️ 需要注意的是：在 css 文件的`loader`配置中`MiniCssExtractPlugin.loader`与`style-loader`不能同时使用。
@@ -350,11 +350,11 @@ const webpack = require("webpack);
 
 module.exports = merge(common, {
   mode: "development",
-  devtool: "inline-source-map",
   devServer: {
     contentBase: "./dist"
   },
-  pluging: [new webpack.HotModuleReplacementPlugin()]
+  pluging: [new webpack.HotModuleReplacementPlugin()],
+  devtool: "source-map"
 });
 ```
 
@@ -378,7 +378,7 @@ module.exports = merge(common, {
 配置如下，命令行只显示警告或错误信息，同时使用`friendly-errors-webpack-plugin`插件，自动清除信息，并自定义显示信息内容。
 
 ```
-npm install -D friendly-errors-webpack-plugin
+npm install --save-dev friendly-errors-webpack-plugin
 ```
 
 webpack.dev.js
@@ -440,10 +440,10 @@ module.exports = merge(common, {
 安装依赖
 
 ```
-npm install -D chalk ora
+npm install --save-dev chalk ora
 ```
 
-新建`build/build.js`，修改`scripts.build` `cross-env NODE_ENV=production node ./build/build.js`，`ora`是一个在命令行显示的加载动画，`chalk`能够输出带有颜色的文字或消息。
+新建`build/build.js`，修改`scripts.build` `cross-env NODE_ENV=production node ./build/build.js`，`ora`能在命令行显示的加载动画，`chalk`能够输出带有颜色的文字或消息。
 
 ```js
 const webpack = require("webpack");
@@ -474,4 +474,74 @@ webpack(webpackConfig, (err, stats) => {
 
   console.log(chalk.cyan("  Build complete.\n"));
 });
+```
+
+## 本机地址访问
+
+首先需要获取本机地址，`nodejs` [`os`](https://nodejs.org/dist/latest-v12.x/docs/api/os.html#os_os_networkinterfaces) 模块提供了相关的功能。
+
+build/util.js
+```js
+...
+const os = require('os')
+...
+
+exports.localAddress = function(dir) {
+  var network = os.networkInterfaces()
+  for (var key in network) {
+    for (var i = 0; i < network[key].length; i++) {
+      var item = network[key][i]
+      if(item.family === 'IPv4'&& item.address !== '127.0.0.1' && !item.internal){
+        return item.address
+      }
+    }
+  }
+}
+
+```
+
+修改`devServerConfig.host`为`'0.0.0.0'`，再修改`FriendlyErrorsPlugin`配置
+
+/build/webpack.dev.js
+```js
+...
+new FriendlyErrorsPlugin({
+  compilationSuccessInfo: {
+    messages: [`App running at:\n\n - Local:   http://localhost:${devServerConfig.port}/\n - Network: http:/{util.localAddress()}:${devServerConfig.port}`],
+  },
+  clearConsole: true
+})
+...
+```
+## 添加`eslint`
+
+具有完备的`eslint`配置可以极大程度上规范编码格式，同时配合编辑器的保存自动根据配置修复，开发体验较好，如果不想使用`eslint`可以在`webpack.dev.js`中设置（不推荐）
+
+安装相关插件
+```
+npm install --save-dev eslint eslint-friendly-formatter eslint-loader eslint-plugin-react
+```
+
+`eslint-loader`配合`eslint-friendly-formatter`能够在编译时将代码与`eslintrc`冲突的错误显示在命令行
+
+修改webpack.common.js
+```js
+...
+const createLintingRule = () => ({
+  test: /\.(js|ts|jsx)$/,
+  loader: 'eslint-loader',
+  enforce: 'pre',
+  include: [util.resolve('src')],
+  options: {
+    formatter: require('eslint-friendly-formatter'),
+    emitWarning: true
+  }
+})
+...
+// 可以通过提取一个config配置文来单独开关相关功能而不需要直接修改配置文件
+rules:[
+  ...(config.eslint ? [createLintingRule()] : []),
+  ...
+]
+...
 ```
