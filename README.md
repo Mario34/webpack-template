@@ -362,7 +362,7 @@ module.exports = merge(common, {
 
 ```json
 
-"dev": "cross-env NODE_ENV=development webpack-dev-server --config ./build/webpack.dev.js"
+"dev": "cross-env NODE_ENV=development webpack-dev-server --inline --progress  --config ./build/webpack.dev.js"
 "build": "cross-env NODE_ENV=production webpack --config ./build/webpack.prod.js"
 
 ```

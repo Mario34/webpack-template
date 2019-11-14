@@ -20,10 +20,11 @@ const devServerConfig = {
      * Shows a full-screen overlay in the browser 
      * when there are compiler errors or warnings.
     */
-    warnings: false,
+    warnings: true,
     errors: true
   },
-  proxy: config.proxy
+  proxy: config.proxy,
+  historyApiFallback: true
 }
 
 module.exports = merge(common, {
@@ -36,7 +37,7 @@ module.exports = merge(common, {
     new webpack.HotModuleReplacementPlugin(),
     new FriendlyErrorsPlugin({
       compilationSuccessInfo: {
-        messages: [`App running at:\n\n - Local:   http://localhost:${devServerConfig.port}/\n - Network: http://${util.localAddress()}:${devServerConfig.port}`],
+        messages: [`App running at:\n\n - Local:   http://localhost:${devServerConfig.port}\n - Network: http://${util.localAddress()}:${devServerConfig.port}`],
       },
       clearConsole: true
     })
